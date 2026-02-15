@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Brand Colors */
+  --deep-burgundy: #5A1E2A;
+  --charcoal: #2B2B2B;
+  --warm-ivory: #F5F1E8;
+  --muted-gold: #C6A75E;
+  --soft-taupe: #B8AFA6;
+
+  /* Semantic mappings - Light Mode Default */
+  --background: var(--warm-ivory);
+  --foreground: var(--charcoal);
+
+  --card: #ffffff;
+  --card-foreground: var(--charcoal);
+
+  --popover: #ffffff;
+  --popover-foreground: var(--charcoal);
+
+  --primary: var(--deep-burgundy);
+  --primary-foreground: var(--warm-ivory);
+
+  --secondary: var(--muted-gold);
+  --secondary-foreground: var(--charcoal);
+
+  --muted: #e5e5e5;
+  --muted-foreground: #737373;
+
+  --accent: var(--soft-taupe);
+  --accent-foreground: var(--charcoal);
+
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+
+  --border: #e2e2e2;
+  --input: #e2e2e2;
+  --ring: var(--deep-burgundy);
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Semantic mappings - Dark Mode */
+  --background: var(--charcoal);
+  --foreground: var(--warm-ivory);
+
+  --card: #363636;
+  --card-foreground: var(--warm-ivory);
+
+  --popover: #363636;
+  --popover-foreground: var(--warm-ivory);
+
+  --primary: var(--muted-gold);
+  --primary-foreground: var(--charcoal);
+
+  --secondary: var(--deep-burgundy);
+  --secondary-foreground: var(--warm-ivory);
+
+  --muted: #525252;
+  --muted-foreground: #a3a3a3;
+
+  --accent: #404040;
+  --accent-foreground: var(--warm-ivory);
+
+  --destructive: #7f1d1d;
+  --destructive-foreground: #f8fafc;
+
+  --border: #525252;
+  --input: #525252;
+  --ring: var(--muted-gold);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+/* Global Styles */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--muted);
+  border-radius: 20px;
+}
