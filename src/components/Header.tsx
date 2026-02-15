@@ -9,7 +9,7 @@ export default function Header({ cartCount = 0, openCart, tableNumber }: { cartC
                 <div className="mr-4 hidden md:flex">
                     <Link href="/" className="mr-6 flex items-center space-x-2">
                         <span className="text-xl font-bold tracking-tight text-primary sm:inline-block">
-                            Hotel Delish
+                            Hotel Food Ordering System
                         </span>
                     </Link>
                 </div>
