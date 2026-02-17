@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import MenuCard from '@/components/MenuCard';
 import CartSidebar, { CartItem } from '@/components/CartSidebar';
+import ItemDetailModal from '@/components/ItemDetailModal';
 import { MenuItem } from '@/types';
 
 function MenuContent() {
@@ -18,6 +19,7 @@ function MenuContent() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
+  const [selectedItemForModal, setSelectedItemForModal] = useState<MenuItem | null>(null);
 
   useEffect(() => {
     fetchMenu();
@@ -52,17 +54,17 @@ function MenuContent() {
     }
   };
 
-  const addToCart = (item: MenuItem) => {
+  const addToCart = (item: MenuItem, quantity: number = 1) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.menuItem._id === item._id);
       if (existing) {
         return prev.map((i) =>
           i.menuItem._id === item._id
-            ? { ...i, quantity: i.quantity + 1 }
+            ? { ...i, quantity: i.quantity + quantity }
             : i
         );
       }
-      return [...prev, { menuItem: item, quantity: 1 }];
+      return [...prev, { menuItem: item, quantity: quantity }];
     });
     setIsCartOpen(true);
   };
@@ -168,7 +170,12 @@ function MenuContent() {
             {/* Menu Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredItems.map((item) => (
-                <MenuCard key={item._id as string} item={item} onAdd={addToCart} />
+                <MenuCard
+                  key={item._id as string}
+                  item={item}
+                  onAdd={addToCart}
+                  onViewDetail={setSelectedItemForModal}
+                />
               ))}
             </div>
           </>
@@ -183,6 +190,13 @@ function MenuContent() {
         onRemove={removeFromCart}
         onPlaceOrder={placeOrder}
         isOrdering={ordering}
+      />
+
+      <ItemDetailModal
+        item={selectedItemForModal}
+        isOpen={!!selectedItemForModal}
+        onClose={() => setSelectedItemForModal(null)}
+        onAddToCart={addToCart}
       />
     </div>
   );

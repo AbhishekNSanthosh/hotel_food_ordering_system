@@ -13,6 +13,10 @@ export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
     if (path.startsWith('/admin') || path.startsWith('/kitchen') || path.startsWith('/billing')) {
+        // Redirect /admin to /admin/dashboard
+        if (path === '/admin') {
+            return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+        }
 
         // Allow access to admin login if it exists, or redirect to generic login
         if (path.includes('/login')) {

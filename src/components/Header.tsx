@@ -1,8 +1,20 @@
 
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ThemeToggle } from './ThemeToggle';
 
 export default function Header({ cartCount = 0, openCart, tableNumber }: { cartCount: number, openCart: () => void, tableNumber?: string }) {
+    const router = useRouter();
+
+    const handleTableChange = (newTable: string) => {
+        router.push(`/?table=${newTable}`);
+    };
+
+    // Generate table options (1-20)
+    const tableOptions = Array.from({ length: 20 }, (_, i) => (i + 1).toString());
+
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-16 items-center justify-between px-4">
@@ -15,7 +27,25 @@ export default function Header({ cartCount = 0, openCart, tableNumber }: { cartC
                 </div>
                 <div className="flex flex-1 items-center justify-between space-x-4 md:justify-end">
                     <div className="w-full flex-1 md:w-auto md:flex-none">
-                        {tableNumber && <span className="text-sm font-medium text-muted-foreground">Table #{tableNumber}</span>}
+                        {tableNumber && (
+                            <div className="flex items-center gap-2">
+                                <label htmlFor="table-select" className="text-sm font-medium text-muted-foreground hidden sm:inline">
+                                    Table:
+                                </label>
+                                <select
+                                    id="table-select"
+                                    value={tableNumber}
+                                    onChange={(e) => handleTableChange(e.target.value)}
+                                    className="px-3 py-1.5 rounded-md border border-border bg-card text-card-foreground text-sm font-medium hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors cursor-pointer"
+                                >
+                                    {tableOptions.map(table => (
+                                        <option key={table} value={table}>
+                                            Table #{table}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
                         <ThemeToggle />
