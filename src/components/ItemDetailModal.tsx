@@ -59,7 +59,7 @@ export default function ItemDetailModal({
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
-              No Image
+              No Images
             </div>
           )}
         </div>
