@@ -13,27 +13,34 @@ export default function MenuCard({ item, onAdd, onViewDetail }: MenuCardProps) {
       className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground transition-all hover:border-foreground/20 cursor-pointer"
       onClick={() => onViewDetail(item)}
     >
-      <div className="aspect-[16/10] relative w-full overflow-hidden bg-muted">
+      <div className="aspect-[16/10] relative w-full overflow-hidden bg-muted group-hover:opacity-90 transition-opacity">
         {item.image ? (
           <img
             src={item.image}
             alt={item.name}
-            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                item.name
+              )}&background=random&color=fff&size=512&bold=true`;
+            }}
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-secondary/50 text-muted-foreground text-sm font-medium">
-            No Image
+          <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-secondary/40 to-muted/60 text-muted-foreground">
+            <span className="text-3xl mb-1">🍽️</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
+              No Image
+            </span>
           </div>
         )}
         <div className="absolute top-2 right-2">
           <span
-            className={`px-2 py-0.5 text-[10px] font-medium rounded-full border bg-background/90 backdrop-blur-sm ${
-              item.isVeg
-                ? "border-green-200 text-green-700"
-                : "border-red-200 text-red-700"
-            }`}
+            className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm backdrop-blur-md ${item.isVeg
+                ? "bg-green-500/10 border-green-500/20 text-green-600"
+                : "bg-red-500/10 border-red-500/20 text-red-600"
+              }`}
           >
-            {item.isVeg ? "Veg" : "Non-Veg"}
+            {item.isVeg ? "🥬 Veg" : "🍗 Non-Veg"}
           </span>
         </div>
       </div>

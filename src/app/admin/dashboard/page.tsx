@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { uploadImageToImgBB } from "@/lib/imageUpload";
 
 interface OrderItem {
   menuItem: string;
@@ -111,40 +112,16 @@ export default function AdminDashboard() {
       };
       reader.readAsDataURL(file);
 
-      // Upload to ImgBB
-      const API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
-
-      if (!API_KEY || API_KEY === "your_imgbb_api_key_here") {
-        alert(
-          "Please configure NEXT_PUBLIC_IMGBB_API_KEY in .env.local file. Get a free API key from https://api.imgbb.com/",
-        );
-        setUploadingImage(false);
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const response = await fetch(
-        `https://api.imgbb.com/1/upload?key=${API_KEY}`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        setMenuFormData({ ...menuFormData, image: data.data.url });
-        alert("Image uploaded successfully!");
-      } else {
-        throw new Error(data.error?.message || "Upload failed");
-      }
-    } catch (error) {
+      // Upload using utility
+      const url = await uploadImageToImgBB(file);
+      setMenuFormData((prev) => ({ ...prev, image: url }));
+      alert("Image uploaded successfully!");
+    } catch (error: any) {
       console.error("Image upload error:", error);
-      alert("Failed to upload image. Please try again.");
+      alert(error.message || "Failed to upload image. Please check your API key.");
       setImagePreview("");
+      // Reset the file input
+      if (e.target) e.target.value = "";
     } finally {
       setUploadingImage(false);
     }
@@ -172,14 +149,25 @@ export default function AdminDashboard() {
   // Handle menu form submission
   const handleMenuSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!menuFormData.image) {
+      alert("Please upload an image first!");
+      return;
+    }
+
+    if (uploadingImage) {
+      alert("Please wait for the image to finish uploading.");
+      return;
+    }
+
     try {
       const method = editingItem ? "PUT" : "POST";
       const body = editingItem
         ? {
-            ...menuFormData,
-            _id: editingItem._id,
-            price: parseFloat(menuFormData.price),
-          }
+          ...menuFormData,
+          _id: editingItem._id,
+          price: parseFloat(menuFormData.price),
+        }
         : { ...menuFormData, price: parseFloat(menuFormData.price) };
 
       const res = await fetch("/api/menu", {
@@ -305,9 +293,8 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
       <aside
-        className={`bg-white border-r border-border transition-all duration-300 ${
-          sidebarOpen ? "w-64" : "w-20"
-        } flex flex-col`}
+        className={`bg-white border-r border-border transition-all duration-300 ${sidebarOpen ? "w-64" : "w-20"
+          } flex flex-col`}
         style={{ minHeight: "100vh" }}
       >
         {/* Sidebar Header */}
@@ -337,11 +324,10 @@ export default function AdminDashboard() {
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                activeSection === item.id
-                  ? "bg-primary text-primary-foreground font-medium"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${activeSection === item.id
+                ? "bg-primary text-primary-foreground font-medium"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
             >
               <span className="text-xl">{item.icon}</span>
               {sidebarOpen && (
@@ -532,11 +518,11 @@ export default function AdminDashboard() {
                         ₹
                         {filteredOrders.length > 0
                           ? (
-                              filteredOrders.reduce(
-                                (sum, o) => sum + o.totalAmount,
-                                0,
-                              ) / filteredOrders.length
-                            ).toFixed(2)
+                            filteredOrders.reduce(
+                              (sum, o) => sum + o.totalAmount,
+                              0,
+                            ) / filteredOrders.length
+                          ).toFixed(2)
                           : "0.00"}
                       </p>
                       {selectedTable !== "all" && (
@@ -580,17 +566,16 @@ export default function AdminDashboard() {
                             Table #{order.tableNumber}
                           </h3>
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              order.status === "Delivered"
-                                ? "bg-green-100 text-green-800"
-                                : order.status === "Cancelled"
-                                  ? "bg-red-100 text-red-800"
-                                  : order.status === "Preparing"
-                                    ? "bg-orange-100 text-orange-800"
-                                    : order.status === "Ready"
-                                      ? "bg-green-100 text-green-800 border border-green-200"
-                                      : "bg-indigo-100 text-indigo-800"
-                            }`}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${order.status === "Delivered"
+                              ? "bg-green-100 text-green-800"
+                              : order.status === "Cancelled"
+                                ? "bg-red-100 text-red-800"
+                                : order.status === "Preparing"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : order.status === "Ready"
+                                    ? "bg-green-100 text-green-800 border border-green-200"
+                                    : "bg-indigo-100 text-indigo-800"
+                              }`}
                           >
                             {order.status}
                           </span>
@@ -738,11 +723,10 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-6 py-4">
                               <span
-                                className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                  item.isVeg
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-red-100 text-red-800"
-                                }`}
+                                className={`px-3 py-1 rounded-full text-xs font-semibold ${item.isVeg
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                                  }`}
                               >
                                 {item.isVeg ? "🥬 Veg" : "🍖 Non-Veg"}
                               </span>
@@ -755,11 +739,10 @@ export default function AdminDashboard() {
                             <td className="px-6 py-4">
                               <button
                                 onClick={() => toggleAvailability(item)}
-                                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                                  item.isAvailable
-                                    ? "bg-green-100 text-green-800 hover:bg-green-200"
-                                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                                }`}
+                                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${item.isAvailable
+                                  ? "bg-green-100 text-green-800 hover:bg-green-200"
+                                  : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                                  }`}
                               >
                                 {item.isAvailable
                                   ? "✓ Available"
@@ -875,13 +858,12 @@ export default function AdminDashboard() {
                               onChange={(e) =>
                                 updateStatus(order._id, e.target.value)
                               }
-                              className={`text-xs font-bold px-2 py-1 rounded border-2 transition-all cursor-pointer outline-none ${
-                                order.status === "Delivered"
-                                  ? "border-green-200 bg-green-50 text-green-700"
-                                  : order.status === "Cancelled"
-                                    ? "border-red-200 bg-red-50 text-red-700"
-                                    : "border-orange-200 bg-orange-50 text-orange-700"
-                              }`}
+                              className={`text-xs font-bold px-2 py-1 rounded border-2 transition-all cursor-pointer outline-none ${order.status === "Delivered"
+                                ? "border-green-200 bg-green-50 text-green-700"
+                                : order.status === "Cancelled"
+                                  ? "border-red-200 bg-red-50 text-red-700"
+                                  : "border-orange-200 bg-orange-50 text-orange-700"
+                                }`}
                             >
                               <option value="Pending">Pending</option>
                               <option value="Confirmed">Confirmed</option>
@@ -1159,9 +1141,13 @@ export default function AdminDashboard() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-primary text-primary-foreground font-bold rounded-lg hover:shadow-lg transition-all duration-200 hover:scale-105"
+                  disabled={uploadingImage || !menuFormData.image}
+                  className={`flex-1 px-6 py-3 font-bold rounded-lg transition-all duration-200 ${uploadingImage || !menuFormData.image
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-primary text-primary-foreground hover:shadow-lg hover:scale-105"
+                    }`}
                 >
-                  {editingItem ? "💾 Update Item" : "➕ Add Item"}
+                  {uploadingImage ? "⏳ Uploading..." : editingItem ? "💾 Update Item" : "➕ Add Item"}
                 </button>
                 <button
                   type="button"

@@ -20,6 +20,11 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     try {
         const body = await request.json();
+
+        if (!body.image) {
+            return NextResponse.json({ error: 'Image is required' }, { status: 400 });
+        }
+
         const newItem = await Menu.create(body);
         return NextResponse.json(newItem, { status: 201 });
     } catch (error) {
@@ -37,6 +42,10 @@ export async function PUT(request: NextRequest) {
 
         if (!_id) {
             return NextResponse.json({ error: 'Item ID is required' }, { status: 400 });
+        }
+
+        if (!updateData.image) {
+            return NextResponse.json({ error: 'Image is required' }, { status: 400 });
         }
 
         const updatedItem = await Menu.findByIdAndUpdate(_id, updateData, { new: true });
