@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { uploadImageToImgBB } from "@/lib/imageUpload";
+import toast from "react-hot-toast";
 
 interface OrderItem {
   menuItem: string;
@@ -84,46 +84,89 @@ export default function AdminDashboard() {
   });
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Handle image upload
+  // Handle image upload with progress
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      toast.error("Please select an image file");
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image size should be less than 5MB");
+      toast.error("Image size should be less than 5MB");
       return;
     }
 
     setUploadingImage(true);
+    setUploadProgress(0);
+
+    // Create preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
 
     try {
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
 
-      // Upload using utility
-      const url = await uploadImageToImgBB(file);
-      setMenuFormData((prev) => ({ ...prev, image: url }));
-      alert("Image uploaded successfully!");
-    } catch (error: any) {
+      if (!API_KEY || API_KEY === "your_imgbb_api_key_here") {
+        toast.error(
+          "Please configure NEXT_PUBLIC_IMGBB_API_KEY in .env.local file. Get a free API key from https://api.imgbb.com/",
+        );
+        setUploadingImage(false);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      // Use XMLHttpRequest for progress tracking
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `https://api.imgbb.com/1/upload?key=${API_KEY}`);
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = (event.loaded / event.total) * 100;
+          setUploadProgress(Math.round(percentComplete));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          if (data.success) {
+            setMenuFormData((prev) => ({ ...prev, image: data.data.url }));
+            toast.success("Image uploaded successfully!");
+          } else {
+            toast.error(
+              "Upload failed: " + (data.error?.message || "Unknown error"),
+            );
+          }
+        } else {
+          toast.error("Upload failed with status " + xhr.status);
+        }
+        setUploadingImage(false);
+        setUploadProgress(0);
+      };
+
+      xhr.onerror = () => {
+        console.error("Image upload error");
+        toast.error("Failed to upload image. Please try again.");
+        setUploadingImage(false);
+        setUploadProgress(0);
+      };
+
+      xhr.send(formData);
+    } catch (error) {
       console.error("Image upload error:", error);
-      alert(error.message || "Failed to upload image. Please check your API key.");
-      setImagePreview("");
-      // Reset the file input
-      if (e.target) e.target.value = "";
-    } finally {
-      setUploadingImage(false);
+      toast.error("Failed to upload image. Please try again.");
     }
   };
 
@@ -150,24 +193,25 @@ export default function AdminDashboard() {
   const handleMenuSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!menuFormData.image) {
-      alert("Please upload an image first!");
-      return;
-    }
-
-    if (uploadingImage) {
-      alert("Please wait for the image to finish uploading.");
-      return;
+    // Check for duplicates
+    if (!editingItem) {
+      const duplicate = menuItems.find(
+        (item) => item.name.toLowerCase() === menuFormData.name.toLowerCase(),
+      );
+      if (duplicate) {
+        toast.error("A menu item with this name already exists!");
+        return;
+      }
     }
 
     try {
       const method = editingItem ? "PUT" : "POST";
       const body = editingItem
         ? {
-          ...menuFormData,
-          _id: editingItem._id,
-          price: parseFloat(menuFormData.price),
-        }
+            ...menuFormData,
+            _id: editingItem._id,
+            price: parseFloat(menuFormData.price),
+          }
         : { ...menuFormData, price: parseFloat(menuFormData.price) };
 
       const res = await fetch("/api/menu", {
@@ -180,17 +224,17 @@ export default function AdminDashboard() {
         fetchMenuItems();
         setShowMenuModal(false);
         resetMenuForm();
-        alert(
+        toast.success(
           editingItem
             ? "Menu item updated successfully!"
             : "Menu item added successfully!",
         );
       } else {
-        alert("Failed to save menu item");
+        toast.error("Failed to save menu item");
       }
     } catch (error) {
       console.error("Menu save error:", error);
-      alert("Error saving menu item");
+      toast.error("Error saving menu item");
     }
   };
 
@@ -237,13 +281,13 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/menu?id=${id}`, { method: "DELETE" });
       if (res.ok) {
         fetchMenuItems();
-        alert("Menu item deleted successfully!");
+        toast.success("Menu item deleted successfully!");
       } else {
-        alert("Failed to delete menu item");
+        toast.error("Failed to delete menu item");
       }
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Error deleting menu item");
+      toast.error("Error deleting menu item");
     }
   };
 
@@ -293,8 +337,9 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
       <aside
-        className={`bg-white border-r border-border transition-all duration-300 ${sidebarOpen ? "w-64" : "w-20"
-          } flex flex-col`}
+        className={`bg-white border-r border-border transition-all duration-300 ${
+          sidebarOpen ? "w-64" : "w-20"
+        } flex flex-col`}
         style={{ minHeight: "100vh" }}
       >
         {/* Sidebar Header */}
@@ -324,10 +369,11 @@ export default function AdminDashboard() {
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${activeSection === item.id
-                ? "bg-primary text-primary-foreground font-medium"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                activeSection === item.id
+                  ? "bg-primary text-primary-foreground font-medium"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
             >
               <span className="text-xl">{item.icon}</span>
               {sidebarOpen && (
@@ -518,11 +564,11 @@ export default function AdminDashboard() {
                         ₹
                         {filteredOrders.length > 0
                           ? (
-                            filteredOrders.reduce(
-                              (sum, o) => sum + o.totalAmount,
-                              0,
-                            ) / filteredOrders.length
-                          ).toFixed(2)
+                              filteredOrders.reduce(
+                                (sum, o) => sum + o.totalAmount,
+                                0,
+                              ) / filteredOrders.length
+                            ).toFixed(2)
                           : "0.00"}
                       </p>
                       {selectedTable !== "all" && (
@@ -566,16 +612,17 @@ export default function AdminDashboard() {
                             Table #{order.tableNumber}
                           </h3>
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${order.status === "Delivered"
-                              ? "bg-green-100 text-green-800"
-                              : order.status === "Cancelled"
-                                ? "bg-red-100 text-red-800"
-                                : order.status === "Preparing"
-                                  ? "bg-orange-100 text-orange-800"
-                                  : order.status === "Ready"
-                                    ? "bg-green-100 text-green-800 border border-green-200"
-                                    : "bg-indigo-100 text-indigo-800"
-                              }`}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              order.status === "Delivered"
+                                ? "bg-green-100 text-green-800"
+                                : order.status === "Cancelled"
+                                  ? "bg-red-100 text-red-800"
+                                  : order.status === "Preparing"
+                                    ? "bg-orange-100 text-orange-800"
+                                    : order.status === "Ready"
+                                      ? "bg-green-100 text-green-800 border border-green-200"
+                                      : "bg-indigo-100 text-indigo-800"
+                            }`}
                           >
                             {order.status}
                           </span>
@@ -723,10 +770,11 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-6 py-4">
                               <span
-                                className={`px-3 py-1 rounded-full text-xs font-semibold ${item.isVeg
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-red-100 text-red-800"
-                                  }`}
+                                className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                  item.isVeg
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-red-100 text-red-800"
+                                }`}
                               >
                                 {item.isVeg ? "🥬 Veg" : "🍖 Non-Veg"}
                               </span>
@@ -739,10 +787,11 @@ export default function AdminDashboard() {
                             <td className="px-6 py-4">
                               <button
                                 onClick={() => toggleAvailability(item)}
-                                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${item.isAvailable
-                                  ? "bg-green-100 text-green-800 hover:bg-green-200"
-                                  : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                                  }`}
+                                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                                  item.isAvailable
+                                    ? "bg-green-100 text-green-800 hover:bg-green-200"
+                                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                                }`}
                               >
                                 {item.isAvailable
                                   ? "✓ Available"
@@ -858,12 +907,13 @@ export default function AdminDashboard() {
                               onChange={(e) =>
                                 updateStatus(order._id, e.target.value)
                               }
-                              className={`text-xs font-bold px-2 py-1 rounded border-2 transition-all cursor-pointer outline-none ${order.status === "Delivered"
-                                ? "border-green-200 bg-green-50 text-green-700"
-                                : order.status === "Cancelled"
-                                  ? "border-red-200 bg-red-50 text-red-700"
-                                  : "border-orange-200 bg-orange-50 text-orange-700"
-                                }`}
+                              className={`text-xs font-bold px-2 py-1 rounded border-2 transition-all cursor-pointer outline-none ${
+                                order.status === "Delivered"
+                                  ? "border-green-200 bg-green-50 text-green-700"
+                                  : order.status === "Cancelled"
+                                    ? "border-red-200 bg-red-50 text-red-700"
+                                    : "border-orange-200 bg-orange-50 text-orange-700"
+                              }`}
                             >
                               <option value="Pending">Pending</option>
                               <option value="Confirmed">Confirmed</option>
@@ -1073,11 +1123,28 @@ export default function AdminDashboard() {
                         className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
                         disabled={uploadingImage}
                       />
-                      <p className="text-xs text-gray-500 mt-1">
-                        {uploadingImage
-                          ? "Uploading to server..."
-                          : "Upload from your device"}
-                      </p>
+                      {uploadingImage ? (
+                        <div className="mt-2 w-full">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-semibold text-primary">
+                              Uploading...
+                            </span>
+                            <span className="text-xs font-semibold text-primary">
+                              {uploadProgress}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                              style={{ width: `${uploadProgress}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Upload from your device
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="mt-2">
@@ -1142,12 +1209,17 @@ export default function AdminDashboard() {
                 <button
                   type="submit"
                   disabled={uploadingImage || !menuFormData.image}
-                  className={`flex-1 px-6 py-3 font-bold rounded-lg transition-all duration-200 ${uploadingImage || !menuFormData.image
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-primary text-primary-foreground hover:shadow-lg hover:scale-105"
-                    }`}
+                  className={`flex-1 px-6 py-3 font-bold rounded-lg transition-all duration-200 ${
+                    uploadingImage || !menuFormData.image
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-primary text-primary-foreground hover:shadow-lg hover:scale-105"
+                  }`}
                 >
-                  {uploadingImage ? "⏳ Uploading..." : editingItem ? "💾 Update Item" : "➕ Add Item"}
+                  {uploadingImage
+                    ? "⏳ Uploading..."
+                    : editingItem
+                      ? "💾 Update Item"
+                      : "➕ Add Item"}
                 </button>
                 <button
                   type="button"
