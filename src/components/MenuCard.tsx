@@ -25,7 +25,7 @@ const MenuCard = forwardRef<HTMLDivElement, MenuCardProps>(
             />
           ) : (
             <div className="flex h-full items-center justify-center bg-secondary/50 text-muted-foreground text-sm font-medium">
-              No Image
+              No Images
             </div>
           )}
           <div className="absolute top-2 right-2">
