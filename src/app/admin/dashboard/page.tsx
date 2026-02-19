@@ -167,7 +167,6 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Image upload error:", error);
       toast.error("Failed to upload image. Please try again.");
-      setUploadingImage(false);
     }
   };
 
@@ -1209,9 +1208,18 @@ export default function AdminDashboard() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-primary text-primary-foreground font-bold rounded-lg hover:shadow-lg transition-all duration-200 hover:scale-105"
+                  disabled={uploadingImage || !menuFormData.image}
+                  className={`flex-1 px-6 py-3 font-bold rounded-lg transition-all duration-200 ${
+                    uploadingImage || !menuFormData.image
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-primary text-primary-foreground hover:shadow-lg hover:scale-105"
+                  }`}
                 >
-                  {editingItem ? "💾 Update Item" : "➕ Add Item"}
+                  {uploadingImage
+                    ? "⏳ Uploading..."
+                    : editingItem
+                      ? "💾 Update Item"
+                      : "➕ Add Item"}
                 </button>
                 <button
                   type="button"
