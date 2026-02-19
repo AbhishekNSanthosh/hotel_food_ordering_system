@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface OrderItem {
   menuItem: string;
@@ -83,39 +84,40 @@ export default function AdminDashboard() {
   });
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Handle image upload
+  // Handle image upload with progress
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      toast.error("Please select an image file");
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image size should be less than 5MB");
+      toast.error("Image size should be less than 5MB");
       return;
     }
 
     setUploadingImage(true);
+    setUploadProgress(0);
+
+    // Create preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
 
     try {
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      // Upload to ImgBB
       const API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
 
       if (!API_KEY || API_KEY === "your_imgbb_api_key_here") {
-        alert(
+        toast.error(
           "Please configure NEXT_PUBLIC_IMGBB_API_KEY in .env.local file. Get a free API key from https://api.imgbb.com/",
         );
         setUploadingImage(false);
@@ -125,27 +127,46 @@ export default function AdminDashboard() {
       const formData = new FormData();
       formData.append("image", file);
 
-      const response = await fetch(
-        `https://api.imgbb.com/1/upload?key=${API_KEY}`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      // Use XMLHttpRequest for progress tracking
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `https://api.imgbb.com/1/upload?key=${API_KEY}`);
 
-      const data = await response.json();
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = (event.loaded / event.total) * 100;
+          setUploadProgress(Math.round(percentComplete));
+        }
+      };
 
-      if (data.success) {
-        setMenuFormData({ ...menuFormData, image: data.data.url });
-        alert("Image uploaded successfully!");
-      } else {
-        throw new Error(data.error?.message || "Upload failed");
-      }
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          if (data.success) {
+            setMenuFormData((prev) => ({ ...prev, image: data.data.url }));
+            toast.success("Image uploaded successfully!");
+          } else {
+            toast.error(
+              "Upload failed: " + (data.error?.message || "Unknown error"),
+            );
+          }
+        } else {
+          toast.error("Upload failed with status " + xhr.status);
+        }
+        setUploadingImage(false);
+        setUploadProgress(0);
+      };
+
+      xhr.onerror = () => {
+        console.error("Image upload error");
+        toast.error("Failed to upload image. Please try again.");
+        setUploadingImage(false);
+        setUploadProgress(0);
+      };
+
+      xhr.send(formData);
     } catch (error) {
       console.error("Image upload error:", error);
-      alert("Failed to upload image. Please try again.");
-      setImagePreview("");
-    } finally {
+      toast.error("Failed to upload image. Please try again.");
       setUploadingImage(false);
     }
   };
@@ -172,6 +193,18 @@ export default function AdminDashboard() {
   // Handle menu form submission
   const handleMenuSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check for duplicates
+    if (!editingItem) {
+      const duplicate = menuItems.find(
+        (item) => item.name.toLowerCase() === menuFormData.name.toLowerCase(),
+      );
+      if (duplicate) {
+        toast.error("A menu item with this name already exists!");
+        return;
+      }
+    }
+
     try {
       const method = editingItem ? "PUT" : "POST";
       const body = editingItem
@@ -192,17 +225,17 @@ export default function AdminDashboard() {
         fetchMenuItems();
         setShowMenuModal(false);
         resetMenuForm();
-        alert(
+        toast.success(
           editingItem
             ? "Menu item updated successfully!"
             : "Menu item added successfully!",
         );
       } else {
-        alert("Failed to save menu item");
+        toast.error("Failed to save menu item");
       }
     } catch (error) {
       console.error("Menu save error:", error);
-      alert("Error saving menu item");
+      toast.error("Error saving menu item");
     }
   };
 
@@ -249,13 +282,13 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/menu?id=${id}`, { method: "DELETE" });
       if (res.ok) {
         fetchMenuItems();
-        alert("Menu item deleted successfully!");
+        toast.success("Menu item deleted successfully!");
       } else {
-        alert("Failed to delete menu item");
+        toast.error("Failed to delete menu item");
       }
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Error deleting menu item");
+      toast.error("Error deleting menu item");
     }
   };
 
@@ -1091,11 +1124,28 @@ export default function AdminDashboard() {
                         className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
                         disabled={uploadingImage}
                       />
-                      <p className="text-xs text-gray-500 mt-1">
-                        {uploadingImage
-                          ? "Uploading to server..."
-                          : "Upload from your device"}
-                      </p>
+                      {uploadingImage ? (
+                        <div className="mt-2 w-full">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-semibold text-primary">
+                              Uploading...
+                            </span>
+                            <span className="text-xs font-semibold text-primary">
+                              {uploadProgress}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                              style={{ width: `${uploadProgress}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Upload from your device
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="mt-2">
