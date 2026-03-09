@@ -13,7 +13,7 @@ interface CartSidebarProps {
   cart: CartItem[];
   onUpdateQuantity: (itemId: string, newQuantity: number) => void;
   onRemove: (itemId: string) => void;
-  onPlaceOrder: (customerName: string, notes: string) => void;
+  onProceedToPayment: (customerName: string, notes: string) => void;
   isOrdering: boolean;
 }
 
@@ -23,7 +23,7 @@ export default function CartSidebar({
   cart,
   onUpdateQuantity,
   onRemove,
-  onPlaceOrder,
+  onProceedToPayment,
   isOrdering,
 }: CartSidebarProps) {
   const [customerName, setCustomerName] = useState("");
@@ -222,11 +222,25 @@ export default function CartSidebar({
             </div>
 
             <button
-              onClick={() => onPlaceOrder(customerName, notes)}
+              onClick={() => onProceedToPayment(customerName, notes)}
               disabled={isOrdering}
-              className="flex w-full items-center justify-center rounded-md border border-transparent bg-primary px-6 py-3 text-base font-medium text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              id="btn-proceed-to-payment"
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-6 py-3 text-base font-medium text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isOrdering ? "Placing Order..." : "Confirm Order"}
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"
+                />
+              </svg>
+              {isOrdering ? "Processing..." : "Proceed to Payment"}
             </button>
             <div className="mt-6 flex justify-center text-center text-sm text-muted-foreground">
               <p>

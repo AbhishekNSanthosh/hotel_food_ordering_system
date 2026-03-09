@@ -9,6 +9,7 @@ import CartSidebar, { CartItem } from "@/components/CartSidebar";
 import ItemDetailModal from "@/components/ItemDetailModal";
 import MenuCardSkeleton from "@/components/MenuCardSkeleton";
 import Footer from "@/components/Footer";
+import PaymentModal from "@/components/PaymentModal";
 import { MenuItem } from "@/types";
 
 function MenuContent() {
@@ -25,6 +26,10 @@ function MenuContent() {
   const [ordering, setOrdering] = useState(false);
   const [selectedItemForModal, setSelectedItemForModal] =
     useState<MenuItem | null>(null);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [paymentCustomerName, setPaymentCustomerName] = useState("");
+  const [paymentNotes, setPaymentNotes] = useState("");
+  const [sessionId, setSessionId] = useState("");
 
   // Pagination & Loading States
   const [page, setPage] = useState(1);
@@ -72,6 +77,17 @@ function MenuContent() {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  // Generate or retrieve table session ID — isolates each new group of customers
+  useEffect(() => {
+    const key = `table_session_${tableNumber}`;
+    let sid = sessionStorage.getItem(key);
+    if (!sid) {
+      sid = `${tableNumber}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+      sessionStorage.setItem(key, sid);
+    }
+    setSessionId(sid);
+  }, [tableNumber]);
 
   // Fetch menu when page or filters change
   useEffect(() => {
@@ -206,45 +222,23 @@ function MenuContent() {
     setCart((prev) => prev.filter((i) => i.menuItem._id !== itemId));
   };
 
-  const placeOrder = async (customerName: string, notes: string) => {
-    setOrdering(true);
-    try {
-      const orderData = {
-        tableNumber,
-        customerName,
-        items: cart.map((i) => ({
-          menuItem: i.menuItem._id,
-          name: i.menuItem.name,
-          price: i.menuItem.price,
-          quantity: i.quantity,
-          notes,
-        })),
-        totalAmount: cart.reduce(
-          (acc, i) => acc + i.menuItem.price * i.quantity,
-          0,
-        ),
-      };
+  const handleProceedToPayment = (customerName: string, notes: string) => {
+    setPaymentCustomerName(customerName);
+    setPaymentNotes(notes);
+    setIsCartOpen(false);
+    setIsPaymentOpen(true);
+  };
 
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData),
-      });
+  const handlePaymentSuccess = (orderId: string) => {
+    toast.success("🎉 Payment successful! Your order is confirmed.");
+    setCart([]);
+    setIsPaymentOpen(false);
+    router.push(`/order-status?table=${tableNumber}`);
+  };
 
-      if (res.ok) {
-        toast.success("Order placed successfully!");
-        setCart([]);
-        setIsCartOpen(false);
-        router.push(`/order-status?table=${tableNumber}`);
-      } else {
-        toast.error("Failed to place order.");
-      }
-    } catch (error) {
-      console.error("Order error", error);
-      toast.error("Error placing order.");
-    } finally {
-      setOrdering(false);
-    }
+  const handlePaymentFailure = (error: string) => {
+    toast.error(`Payment failed: ${error}`);
+    setIsPaymentOpen(false);
   };
 
   return (
@@ -363,7 +357,7 @@ function MenuContent() {
         cart={cart}
         onUpdateQuantity={updateQuantity}
         onRemove={removeFromCart}
-        onPlaceOrder={placeOrder}
+        onProceedToPayment={handleProceedToPayment}
         isOrdering={ordering}
       />
 
@@ -372,6 +366,18 @@ function MenuContent() {
         isOpen={!!selectedItemForModal}
         onClose={() => setSelectedItemForModal(null)}
         onAddToCart={addToCart}
+      />
+
+      <PaymentModal
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        cart={cart}
+        tableNumber={tableNumber}
+        customerName={paymentCustomerName}
+        notes={paymentNotes}
+        sessionId={sessionId}
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentFailure={handlePaymentFailure}
       />
     </div>
   );

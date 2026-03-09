@@ -12,8 +12,13 @@ export interface IOrder extends Document {
     items: IOrderItem[];
     totalAmount: number;
     status: 'Pending' | 'Confirmed' | 'Preparing' | 'Ready' | 'Delivered' | 'Cancelled';
-    paymentStatus: 'Pending' | 'Paid';
+    paymentStatus: 'Pending' | 'Paid' | 'Failed';
+    paymentMethod?: 'razorpay' | 'cod';
+    razorpayOrderId?: string;
+    razorpayPaymentId?: string;
+    razorpaySignature?: string;
     customerNote?: string;
+    sessionId?: string;
     estimatedPrepTime: number; // in minutes
     isDelayedCompensationApplied?: boolean;
     compensationNote?: string;
@@ -40,10 +45,15 @@ const OrderSchema: Schema = new Schema(
         },
         paymentStatus: {
             type: String,
-            enum: ['Pending', 'Paid'],
+            enum: ['Pending', 'Paid', 'Failed'],
             default: 'Pending',
         },
+        paymentMethod: { type: String, enum: ['razorpay', 'cod'] },
+        razorpayOrderId: { type: String },
+        razorpayPaymentId: { type: String },
+        razorpaySignature: { type: String },
         customerNote: { type: String },
+        sessionId: { type: String, index: true },
         estimatedPrepTime: { type: Number, default: 15 }, // Store total prep time calculated at order creation
         isDelayedCompensationApplied: { type: Boolean, default: false },
         compensationNote: { type: String },
