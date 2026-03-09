@@ -17,7 +17,7 @@ export async function POST(req: Request) {
         // Fetch prep times for items to calculate total estimated prep time
         const itemIds = body.items.map((i: any) => i.menuItem);
         const menuItems = await Menu.find({ _id: { $in: itemIds } });
-        
+
         let maxPrepTime = 15; // default 15 mins
         if (menuItems.length > 0) {
             maxPrepTime = Math.max(...menuItems.map(item => item.prepTime || 15));
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
             ...body,
             estimatedPrepTime: maxPrepTime
         });
-        
+
         return NextResponse.json(order, { status: 201 });
     } catch (error) {
         console.error('Order error:', error);
@@ -40,7 +40,13 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const tableNumber = searchParams.get('tableNumber');
-        const filter = tableNumber ? { tableNumber } : {};
+        const sessionId = searchParams.get('sessionId');
+
+        // Build filter: always scope by tableNumber if given
+        const filter: Record<string, string> = {};
+        if (tableNumber) filter.tableNumber = tableNumber;
+        // Scope to session if provided — new customers won't see previous sessions
+        if (sessionId) filter.sessionId = sessionId;
 
         const orders = await Order.find(filter).sort({ createdAt: -1 });
         // Map to ensure estimatedPrepTime exists (for older records in DB)
