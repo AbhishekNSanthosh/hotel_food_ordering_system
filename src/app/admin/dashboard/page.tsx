@@ -1627,9 +1627,9 @@ export default function AdminDashboard() {
                                 {/* Receipt Column */}
                                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col print:shadow-none print:border-none print:p-0">
                                     <div className="text-center mb-6 pb-6 border-b-2 border-dashed border-slate-200">
-                                        <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">The Grand Hotel</h2>
-                                        <p className="text-slate-500 text-sm">123 Culinary Hub, Food Street</p>
-                                        <p className="text-slate-500 text-sm">Phone: +91 98765 43210</p>
+                                        <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Hotel Delish - Fine Dining</h2>
+                                        <p className="text-slate-500 text-sm">45 Gourmet Avenue, Downtown</p>
+                                        <p className="text-slate-500 text-sm">Phone: +91 98765 12345 | Web: www.hoteldelish.com</p>
                                         <p className="text-slate-500 text-sm font-semibold mt-4 uppercase tracking-widest text-[10px]">Tax Invoice / Receipt</p>
                                     </div>
 

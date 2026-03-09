@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
-import { UtensilsCrossed, ShoppingBag, Clock } from "lucide-react";
+import { UtensilsCrossed, ShoppingBag, Clock, Receipt } from "lucide-react";
 
 export default function Header({
   cartCount = 0,
@@ -31,7 +31,7 @@ export default function Header({
               <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-black tracking-tight text-foreground hidden sm:inline-block">
-              Hotel Food <span className="text-primary">Ordering System</span>
+              Hotel Delish <span className="text-primary">- Fine Dining</span>
             </span>
           </Link>
           
@@ -55,13 +55,22 @@ export default function Header({
 
         <div className="flex items-center gap-3">
           {tableNumber && (
-            <Link 
-              href={`/order-status?table=${tableNumber}`}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
-            >
-              <Clock className="w-4 h-4" />
-              <span className="hidden sm:inline">Track Order</span>
-            </Link>
+            <>
+              <Link 
+                href={`/order-status?table=${tableNumber}`}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+              >
+                <Clock className="w-4 h-4" />
+                <span className="hidden sm:inline">Track Order</span>
+              </Link>
+              <Link 
+                href={`/bill?table=${tableNumber}`}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+              >
+                <Receipt className="w-4 h-4" />
+                <span className="hidden sm:inline">View Bill</span>
+              </Link>
+            </>
           )}
 
           <div className="flex items-center gap-2 border-l border-border pl-3">
