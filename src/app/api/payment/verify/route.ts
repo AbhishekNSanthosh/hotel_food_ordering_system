@@ -7,9 +7,9 @@ export async function POST(req: Request) {
     await dbConnect();
     try {
         const body = await req.json();
-        const { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = body;
+        const { orderId, sessionId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = body;
 
-        if (!orderId || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+        if ((!orderId && !sessionId) || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
             return NextResponse.json({ error: 'Missing payment verification fields' }, { status: 400 });
         }
 
@@ -20,31 +20,40 @@ export async function POST(req: Request) {
             .digest('hex');
 
         if (expectedSignature !== razorpaySignature) {
-            // Mark order as failed
-            await Order.findByIdAndUpdate(orderId, { paymentStatus: 'Failed' });
+            if (orderId) {
+                await Order.findByIdAndUpdate(orderId, { paymentStatus: 'Failed' });
+            } else if (sessionId) {
+                await Order.updateMany({ sessionId, razorpayOrderId }, { paymentStatus: 'Failed' });
+            }
             return NextResponse.json({ error: 'Payment verification failed. Invalid signature.' }, { status: 400 });
         }
 
-        // Mark order as paid
-        const order = await Order.findByIdAndUpdate(
-            orderId,
-            {
-                paymentStatus: 'Paid',
-                razorpayPaymentId,
-                razorpaySignature,
-                status: 'Confirmed',
-            },
-            { new: true }
-        );
-
-        if (!order) {
-            return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+        // Mark as paid
+        if (orderId) {
+            await Order.findByIdAndUpdate(
+                orderId,
+                {
+                    paymentStatus: 'Paid',
+                    razorpayPaymentId,
+                    razorpaySignature,
+                    status: 'Confirmed',
+                }
+            );
+        } else if (sessionId) {
+            await Order.updateMany(
+                { sessionId, razorpayOrderId },
+                {
+                    paymentStatus: 'Paid',
+                    razorpayPaymentId,
+                    razorpaySignature,
+                    // Note: We don't automatically confirm if they were already preparing/ready
+                }
+            );
         }
 
         return NextResponse.json({
             success: true,
-            orderId: order._id,
-            tableNumber: order.tableNumber,
+            message: 'Payment verified and status updated'
         });
 
     } catch (error) {
