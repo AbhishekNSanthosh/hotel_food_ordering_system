@@ -5,11 +5,12 @@ import { Clock } from 'lucide-react';
 
 interface OrderTimerProps {
   createdAt: string;
+  preparationStartedAt?: string | Date; // NEW
   estimatedPrepTime: number; // in minutes
   status: string;
 }
 
-export default function OrderTimer({ createdAt, estimatedPrepTime, status }: OrderTimerProps) {
+export default function OrderTimer({ createdAt, preparationStartedAt, estimatedPrepTime, status }: OrderTimerProps) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [percentDone, setPercentDone] = useState(0);
 
@@ -21,32 +22,38 @@ export default function OrderTimer({ createdAt, estimatedPrepTime, status }: Ord
     }
 
     const calculateTime = () => {
-      const start = new Date(createdAt).getTime();
+      // Use preparationStartedAt if available, otherwise fallback to createdAt (but we'll adjust display)
+      const start = preparationStartedAt ? new Date(preparationStartedAt).getTime() : new Date(createdAt).getTime();
       const now = new Date().getTime();
       
-      // Parse estimatedPrepTime and ensure it's a number
-      const prepTime = typeof estimatedPrepTime === 'number' ? estimatedPrepTime : parseInt(estimatedPrepTime as any) || 15;
+      // If status is Pending or Confirmed, we DON'T count down (timer stays at full estimated time)
+      const isStarted = status === 'Preparing' || !!preparationStartedAt;
       
+      const prepTime = typeof estimatedPrepTime === 'number' ? estimatedPrepTime : parseInt(estimatedPrepTime as any) || 15;
       const prepDurationMs = prepTime * 60 * 1000;
       const end = start + prepDurationMs;
       
       const remainingMs = end - now;
       const elapsedMs = now - start;
       
-      const remainingMinutes = Math.max(0, Math.ceil(remainingMs / 60000));
-      // Avoid division by zero
-      const percentage = prepDurationMs > 0 
+      let remainingMinutes = Math.max(0, Math.ceil(remainingMs / 60000));
+      let percentage = prepDurationMs > 0 
         ? Math.min(100, Math.max(0, (elapsedMs / prepDurationMs) * 100))
         : 100;
+
+      if (!isStarted) {
+          remainingMinutes = prepTime;
+          percentage = 0;
+      }
       
-      setTimeLeft(isNaN(remainingMinutes) ? 15 : remainingMinutes);
+      setTimeLeft(isNaN(remainingMinutes) ? prepTime : remainingMinutes);
       setPercentDone(isNaN(percentage) ? 0 : percentage);
     };
 
     calculateTime();
-    const interval = setInterval(calculateTime, 10000); // Update every 10s
+    const interval = setInterval(calculateTime, 10000); 
     return () => clearInterval(interval);
-  }, [createdAt, estimatedPrepTime, status]);
+  }, [createdAt, preparationStartedAt, estimatedPrepTime, status]);
 
   if (status === 'Delivered' || status === 'Cancelled' || status === 'Ready') {
       return null;
@@ -87,8 +94,8 @@ export default function OrderTimer({ createdAt, estimatedPrepTime, status }: Ord
       </div>
       
       <div className="mt-2 flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-        <span>Order Started</span>
-        <span>{percentDone >= 100 ? "Ready Soon" : "In Progress"}</span>
+        <span>{status === 'Preparing' || !!preparationStartedAt ? "Cooking Started" : "Order Queue"}</span>
+        <span>{status === 'Preparing' || !!preparationStartedAt ? (percentDone >= 100 ? "Ready Soon" : "Cook in Progress") : "Waiting for Kitchen"}</span>
       </div>
     </div>
   );

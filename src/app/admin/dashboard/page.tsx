@@ -22,6 +22,7 @@ interface Order {
   totalAmount: number;
   status: string;
   createdAt: string;
+  preparationStartedAt?: string; // NEW
   estimatedPrepTime: number;
 }
 
@@ -1185,12 +1186,19 @@ export default function AdminDashboard() {
               !["Delivered", "Cancelled"].includes(o.status)
             );
 
-            const getElapsedMinutes = (createdAt: string) =>
+            const getWaitMinutes = (createdAt: string) =>
               Math.floor((kitchenNow.getTime() - new Date(createdAt).getTime()) / 60000);
 
+            const getElapsedMinutes = (createdAt: string, startedAt?: string) => {
+              if (!startedAt) return 0; // Timer hasn't started yet
+              return Math.floor((kitchenNow.getTime() - new Date(startedAt).getTime()) / 60000);
+            };
+
             const getRemainingMinutes = (order: Order) => {
-              const elapsed = getElapsedMinutes(order.createdAt);
-              return (order.estimatedPrepTime || 15) - elapsed;
+              const elapsed = getElapsedMinutes(order.createdAt, order.preparationStartedAt);
+              const prep = order.estimatedPrepTime || 15;
+              if (!order.preparationStartedAt) return prep; // Show full time if not started
+              return prep - elapsed;
             };
 
             const getDelayLevel = (order: Order) => {
@@ -1315,13 +1323,16 @@ export default function AdminDashboard() {
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {filteredKitchenOrders.map((order) => {
-                      const elapsed = getElapsedMinutes(order.createdAt);
+                      const totalWait = getWaitMinutes(order.createdAt);
+                      const elapsed = getElapsedMinutes(order.createdAt, order.preparationStartedAt);
                       const remaining = getRemainingMinutes(order);
                       const delay = getDelayLevel(order);
                       const cfg = statusConfig[order.status] || statusConfig["Pending"];
                       const isSelected = selectedKitchenOrder?._id === order._id;
 
-                      const progress = Math.min(100, Math.max(0, (elapsed / (order.estimatedPrepTime || 15)) * 100));
+                      const progress = order.preparationStartedAt 
+                         ? Math.min(100, Math.max(0, (elapsed / (order.estimatedPrepTime || 15)) * 100))
+                         : 0;
 
                       return (
                         <div
@@ -1342,7 +1353,11 @@ export default function AdminDashboard() {
                               <span className="text-[10px] font-bold bg-card/60 border border-black/5 rounded-full px-2 py-0.5 text-muted-foreground uppercase tracking-widest">#{order._id.slice(-5)}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              {remaining <= 0 ? (
+                              {!order.preparationStartedAt ? (
+                                <span className="text-[10px] font-black tracking-widest bg-slate-900/5 text-slate-400 px-2.5 py-1 rounded-full border border-slate-900/5 uppercase">
+                                  ⏳ Not Started
+                                </span>
+                              ) : remaining <= 0 ? (
                                 <span className={`text-[10px] font-black tracking-widest px-2.5 py-1 rounded-full animate-pulse ${remaining <= -10 ? 'bg-rose-500 text-white' : 'bg-orange-500 text-white'}`}>
                                   {remaining <= -10 ? '🚨 CRITICAL' : '⚠️ DELAYED'}
                                 </span>
@@ -1352,7 +1367,7 @@ export default function AdminDashboard() {
                                 </span>
                               )}
                               <div className="flex items-center gap-1 text-sm font-bold">
-                                <span>{elapsed}m</span>
+                                <span>{totalWait}m</span>
                               </div>
                             </div>
                           </div>

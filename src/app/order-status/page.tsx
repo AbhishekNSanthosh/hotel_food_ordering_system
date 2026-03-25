@@ -16,6 +16,8 @@ import {
   Receipt,
 } from "lucide-react";
 import Link from "next/link";
+import GameZone from "@/components/GameZone";
+import CompensationModal from "@/components/CompensationModal";
 
 interface OrderItem {
   name: string;
@@ -49,6 +51,8 @@ function OrderStatusContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState("");
+  const [compensationNote, setCompensationNote] = useState("");
+  const [isCompModalOpen, setIsCompModalOpen] = useState(false);
 
   const fetchOrders = async (sid: string) => {
     if (!sid) return;
@@ -81,6 +85,21 @@ function OrderStatusContent() {
     const interval = setInterval(() => fetchOrders(sessionId), 10000);
     return () => clearInterval(interval);
   }, [tableNumber, sessionId]);
+
+  // Handle compensation detection
+  useEffect(() => {
+    const freshCompensation = orders.find((o) => {
+      if (!o.isDelayedCompensationApplied) return false;
+      const seenKey = `seen_comp_${o._id}`;
+      return !localStorage.getItem(seenKey);
+    });
+
+    if (freshCompensation) {
+      setCompensationNote(freshCompensation.compensationNote || "We have added a special benefit for you.");
+      setIsCompModalOpen(true);
+      localStorage.setItem(`seen_comp_${freshCompensation._id}`, "true");
+    }
+  }, [orders]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -263,6 +282,12 @@ function OrderStatusContent() {
       </main>
 
       <Footer />
+      <GameZone />
+      <CompensationModal 
+        isOpen={isCompModalOpen} 
+        onClose={() => setIsCompModalOpen(false)} 
+        note={compensationNote} 
+      />
     </div>
   );
 }

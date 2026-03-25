@@ -20,6 +20,7 @@ export interface IOrder extends Document {
     customerNote?: string;
     sessionId?: string;
     estimatedPrepTime: number; // in minutes
+    preparationStartedAt?: Date; // NEW
     isDelayedCompensationApplied?: boolean;
     compensationNote?: string;
     createdAt: Date;
@@ -55,6 +56,7 @@ const OrderSchema: Schema = new Schema(
         customerNote: { type: String },
         sessionId: { type: String, index: true },
         estimatedPrepTime: { type: Number, default: 15 }, // Store total prep time calculated at order creation
+        preparationStartedAt: { type: Date }, // NEW: Track when the timer actually starts
         isDelayedCompensationApplied: { type: Boolean, default: false },
         compensationNote: { type: String },
     },

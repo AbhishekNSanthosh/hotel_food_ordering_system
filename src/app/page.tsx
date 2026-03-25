@@ -9,8 +9,11 @@ import CartSidebar, { CartItem } from "@/components/CartSidebar";
 import ItemDetailModal from "@/components/ItemDetailModal";
 import MenuCardSkeleton from "@/components/MenuCardSkeleton";
 import Footer from "@/components/Footer";
-import PaymentModal from "@/components/PaymentModal";
+import OrderConfirmationModal from "@/components/OrderConfirmationModal";
 import { MenuItem } from "@/types";
+import GameZone from "@/components/GameZone";
+import CompensationModal from "@/components/CompensationModal";
+
 
 function MenuContent() {
   const router = useRouter();
@@ -30,6 +33,8 @@ function MenuContent() {
   const [paymentCustomerName, setPaymentCustomerName] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
   const [sessionId, setSessionId] = useState("");
+  const [compensationNote, setCompensationNote] = useState("");
+  const [isCompModalOpen, setIsCompModalOpen] = useState(false);
 
   // Pagination & Loading States
   const [page, setPage] = useState(1);
@@ -137,6 +142,37 @@ function MenuContent() {
       controller.abort();
     };
   }, [page, selectedCategory, vegFilter]);
+  
+  // Polling for compensations even on menu
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const checkCompensations = async () => {
+      try {
+        const params = new URLSearchParams({ tableNumber, sessionId });
+        const res = await fetch(`/api/orders?${params}`);
+        if (res.ok) {
+           const orders = await res.json();
+           const fresh = orders.find((o: any) => {
+             if (!o.isDelayedCompensationApplied) return false;
+             return !localStorage.getItem(`seen_comp_${o._id}`);
+           });
+
+           if (fresh) {
+              setCompensationNote(fresh.compensationNote || "A special benefit has been added for you.");
+              setIsCompModalOpen(true);
+              localStorage.setItem(`seen_comp_${fresh._id}`, "true");
+           }
+        }
+      } catch (err) {
+        console.error("Comp polling err", err);
+      }
+    };
+
+    const interval = setInterval(checkCompensations, 30000); // 30s is enough for menu
+    checkCompensations(); // Initial check
+    return () => clearInterval(interval);
+  }, [sessionId, tableNumber]);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -230,7 +266,7 @@ function MenuContent() {
   };
 
   const handlePaymentSuccess = (orderId: string) => {
-    toast.success("🎉 Payment successful! Your order is confirmed.");
+    toast.success("🎉 Your order is confirmed! Sent to kitchen.");
     setCart([]);
     setIsPaymentOpen(false);
     router.push(`/order-status?table=${tableNumber}`);
@@ -368,7 +404,7 @@ function MenuContent() {
         onAddToCart={addToCart}
       />
 
-      <PaymentModal
+      <OrderConfirmationModal
         isOpen={isPaymentOpen}
         onClose={() => setIsPaymentOpen(false)}
         cart={cart}
@@ -376,8 +412,15 @@ function MenuContent() {
         customerName={paymentCustomerName}
         notes={paymentNotes}
         sessionId={sessionId}
-        onPaymentSuccess={handlePaymentSuccess}
-        onPaymentFailure={handlePaymentFailure}
+        onOrderSuccess={handlePaymentSuccess}
+        onOrderFailure={handlePaymentFailure}
+      />
+      
+      <GameZone />
+      <CompensationModal 
+        isOpen={isCompModalOpen} 
+        onClose={() => setIsCompModalOpen(false)} 
+        note={compensationNote} 
       />
     </div>
   );

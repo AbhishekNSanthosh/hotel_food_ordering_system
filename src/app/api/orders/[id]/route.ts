@@ -20,13 +20,20 @@ export async function PATCH(
 
         let updateData = { ...body };
 
+        // NEW: Set preparation start time when status changes to Preparing
+        if (body.status === 'Preparing' && !currentOrder.preparationStartedAt) {
+            updateData.preparationStartedAt = new Date();
+        }
+
         // 2. Check for delay compensation
         const isMarkingReadyOrDelivered = ['Ready', 'Delivered'].includes(body.status);
         if (isMarkingReadyOrDelivered && !currentOrder.isDelayedCompensationApplied) {
             const now = new Date().getTime();
-            const createdAt = new Date(currentOrder.createdAt).getTime();
+            // Use preparationStartedAt if available for more accurate delay tracking, otherwise createdAt
+            const timerBasis = currentOrder.preparationStartedAt || currentOrder.createdAt;
+            const startBasis = new Date(timerBasis).getTime();
             const prepTimeMinutes = currentOrder.estimatedPrepTime || 15;
-            const expectedReadyTime = createdAt + (prepTimeMinutes * 60000);
+            const expectedReadyTime = startBasis + (prepTimeMinutes * 60000);
 
             if (now > expectedReadyTime) {
                 // Order is delayed! Add Chicken Soup as compensation

@@ -224,23 +224,23 @@ export default function CartSidebar({
             <button
               onClick={() => onProceedToPayment(customerName, notes)}
               disabled={isOrdering}
-              id="btn-proceed-to-payment"
-              className="flex w-full items-center justify-center gap-2 rounded-md border border-transparent bg-primary px-6 py-3 text-base font-medium text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              id="btn-order-now"
+              className="flex w-full items-center justify-center gap-2 rounded-[1.5rem] border border-transparent bg-gray-900 dark:bg-indigo-600 px-6 py-5 text-lg font-black text-white shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               <svg
-                className="w-4 h-4"
+                className="w-6 h-6"
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 stroke="currentColor"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"
+                  d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                 />
               </svg>
-              {isOrdering ? "Processing..." : "Proceed to Payment"}
+              {isOrdering ? "Processing..." : "Order Now"}
             </button>
             <div className="mt-6 flex justify-center text-center text-sm text-muted-foreground">
               <p>
