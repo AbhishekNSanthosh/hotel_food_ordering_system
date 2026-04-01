@@ -23,8 +23,8 @@ export default function Header({
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary rounded-lg flex items-center justify-center">
               <UtensilsCrossed className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
             </div>
-            <span className="text-lg sm:text-xl font-black tracking-tight text-foreground hidden sm:inline-block">
-              Hotel Delish <span className="text-primary">- Fine Dining</span>
+            <span className="text-base sm:text-lg lg:text-xl font-black tracking-tight text-foreground transition-all">
+              Hotel Delish <span className="text-primary hidden md:inline-block">- Fine Dining</span>
             </span>
           </Link>
         </div>

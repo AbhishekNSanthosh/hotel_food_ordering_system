@@ -356,10 +356,10 @@ function MenuContent() {
         </span>
       </button>
 
-      <main className="container mx-auto px-4 py-8 flex-1">
+      <main className="container mx-auto px-4 py-6 sm:py-8 flex-1">
         {/* Category Tabs & Veg Filter */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-          <div className="flex overflow-x-auto pb-2 gap-2 scrollbar-hide w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-8">
+          <div className="flex overflow-x-auto pb-1 gap-2 scrollbar-hide w-full sm:w-auto">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -377,7 +377,7 @@ function MenuContent() {
 
           <div 
             ref={searchRef}
-            className="flex-1 max-w-sm w-full relative group"
+            className="flex-1 sm:max-w-sm w-full relative group"
           >
             <div className="relative">
               <input
@@ -445,7 +445,7 @@ function MenuContent() {
             )}
           </div>
 
-          <div className="flex items-center gap-2 border border-border rounded-full p-1 bg-card">
+          <div className="flex items-center justify-center sm:justify-start gap-2 border border-border rounded-full p-1 bg-card self-center sm:self-auto">
             <button
               onClick={() => setVegFilter("all")}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
