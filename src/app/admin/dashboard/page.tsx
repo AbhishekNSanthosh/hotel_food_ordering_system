@@ -29,16 +29,19 @@ interface Order {
 export default function AdminDashboard() {
   const router = useRouter();
 
-  // Basic UI State
+  // State to manage the visibility of the sidebar for mobile/responsive behavior
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Current active view in the dashboard (e.g., 'dashboard', 'menu', 'kitchen', 'billing')
   const [activeSection, setActiveSection] = useState("dashboard");
+  // Filter for orders based on the table number
   const [selectedTable, setSelectedTable] = useState<string>("all");
 
-  // Orders State
+  // Stores all orders fetched from the API
   const [orders, setOrders] = useState<Order[]>([]);
+  // Tracking previously seen IDs to identify brand new orders for notifications
   const [prevOrderIds, setPrevOrderIds] = useState<string[]>([]);
 
-  // Menu Management State
+  // Menu selection and editing logic
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -80,6 +83,10 @@ export default function AdminDashboard() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  /**
+   * Fetches active orders from the server.
+   * Includes a cache-busting timestamp to prevent stale browser data.
+   */
   const fetchOrders = async () => {
     try {
       const res = await fetch(`/api/orders?t=${Date.now()}`, { cache: "no-store" });
@@ -92,9 +99,10 @@ export default function AdminDashboard() {
     }
   };
 
+  // Initial data fetch and periodic polling for real-time dashboard updates
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 10000); // Poll every 10s
+    const interval = setInterval(fetchOrders, 10000); // 10s polling interval
     return () => clearInterval(interval);
   }, []);
 
@@ -118,6 +126,7 @@ export default function AdminDashboard() {
   }, []);
 
   // Detect new orders and notify
+  // Compares incoming order list with previous state to trigger UI notifications for new tasks
   useEffect(() => {
     const currentIds = orders.map((o) => o._id);
     const newOnes = currentIds.filter((id) => !prevOrderIds.includes(id));
@@ -182,7 +191,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Handle image upload with progress
+  /**
+   * Orchestrates the image upload process, including validation (type/size),
+   * instant preview for UX, and progress tracking via XHR.
+   */
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

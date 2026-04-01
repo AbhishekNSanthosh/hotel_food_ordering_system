@@ -21,12 +21,14 @@ function MenuContent() {
   const searchParams = useSearchParams();
   const tableNumber = searchParams.get("table") || "1";
 
+  // Core shop state
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<string[]>(["All"]);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]); // Array of {menuItem, quantity}
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [vegFilter, setVegFilter] = useState<"all" | "veg" | "non-veg">("all");
+  // Search query states for real-time list and debounced grid update
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [searchResults, setSearchResults] = useState<MenuItem[]>([]);
@@ -69,6 +71,11 @@ function MenuContent() {
   const limit = 8;
   const observer = useRef<IntersectionObserver | null>(null);
 
+  /**
+   * Infinite scroll observer logic.
+   * Tracks the visibility of the 'last' element in the grid and triggers a 
+   * page increment when the user reaches the bottom.
+   */
   const lastMenuItemRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (loading) return;

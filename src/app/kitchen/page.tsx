@@ -20,9 +20,14 @@ interface Order {
 }
 
 export default function KitchenDashboard() {
+    // State to store orders specifically for the kitchen (Pending, Preparing, etc.)
     const [orders, setOrders] = useState<Order[]>([]);
     const router = useRouter();
 
+    /**
+     * Fetches all active orders from the database and filters them 
+     * for statuses relevant to the kitchen staff.
+     */
     const fetchOrders = async () => {
         try {
             const res = await fetch('/api/orders');
@@ -37,12 +42,17 @@ export default function KitchenDashboard() {
         }
     };
 
+    // Setup polling to keep orders list fresh without manual refresh
     useEffect(() => {
         fetchOrders();
-        const interval = setInterval(fetchOrders, 5000); // 5s poll for kitchen
+        const interval = setInterval(fetchOrders, 5000); // 5s poll for real-time kitchen updates
         return () => clearInterval(interval);
     }, []);
 
+    /**
+     * Updates the status of an order (e.g., from Pending to Preparing)
+     * and triggers a re-fetch of the order list.
+     */
     const updateStatus = async (id: string, newStatus: string) => {
         try {
             const res = await fetch(`/api/orders/${id}`, {
@@ -58,6 +68,7 @@ export default function KitchenDashboard() {
         }
     };
 
+    // Basic authentication removal and redirect
     const logout = async () => {
         await fetch('/api/admin/logout', { method: 'POST' });
         router.push('/login');
@@ -81,6 +92,7 @@ export default function KitchenDashboard() {
 
             <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                 <div className="px-4 text-center sm:px-0">
+                    {/* Conditional rendering based on whether there are orders to display */}
                     {orders.length === 0 ? (
                         <div className="text-center py-10">
                             <p className="text-gray-500 text-lg">No orders to cook.</p>
@@ -115,6 +127,7 @@ export default function KitchenDashboard() {
                                             Ordered: {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     </div>
+                                    {/* Action buttons based on the current order status */}
                                     <div className="bg-gray-50 px-4 py-4 flex gap-3 border-t">
                                         {['Pending', 'Confirmed'].includes(order.status) && (
                                             <button

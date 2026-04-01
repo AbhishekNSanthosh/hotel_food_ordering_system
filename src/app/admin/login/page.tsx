@@ -5,11 +5,17 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLogin() {
+    // Form field states
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    // Error state for UI feedback on failed login attempts
     const [error, setError] = useState('');
     const router = useRouter();
 
+    /**
+     * Handles the admin login submission.
+     * Communicates with the /api/admin/login endpoint and redirects on success.
+     */
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -20,13 +26,14 @@ export default function AdminLogin() {
             });
 
             if (res.ok) {
+                // Redirecting to the secure admin dashboard upon valid credentials
                 router.push('/admin/dashboard');
             } else {
                 setError('Invalid credentials');
             }
         } catch (err) {
             console.error(err);
-            setError('An error occurred');
+            setError('An error occurred during verification');
         }
     };
 
