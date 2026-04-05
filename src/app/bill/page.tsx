@@ -27,6 +27,7 @@ interface Order {
   items: OrderItem[];
   totalAmount: number;
   status: string;
+  paymentStatus: string;
   createdAt: string;
 }
 
@@ -82,9 +83,12 @@ function BillContent() {
     return () => clearInterval(interval);
   }, [tableNumber]);
 
-  // Aggregate items
+  const unpaidOrders = orders.filter(o => o.paymentStatus !== 'Paid');
+  const hasPaidOrders = orders.some(o => o.paymentStatus === 'Paid');
+
+  // Aggregate items from UNPAID orders for the current bill
   let aggregatedItems: { name: string; quantity: number; price: number }[] = [];
-  orders.forEach(order => {
+  unpaidOrders.forEach(order => {
     order.items.forEach(item => {
       const existing = aggregatedItems.find(i => i.name === item.name && i.price === item.price);
       if (existing) {
@@ -185,21 +189,39 @@ function BillContent() {
                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                <p className="mt-4 text-gray-500 font-bold">Generating your bill...</p>
              </div>
-          ) : orders.length === 0 ? (
+          ) : unpaidOrders.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-[2rem] border border-gray-200 px-6 shadow-sm print:hidden flex flex-col gap-8">
-              <div>
-                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="w-10 h-10 text-green-500" />
+              {hasPaidOrders ? (
+                <div>
+                  <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="w-10 h-10 text-green-500" />
+                  </div>
+                  <h2 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Payment Complete</h2>
+                  <p className="text-gray-500 mb-8 max-w-sm mx-auto font-medium">Thank you for visiting Hotel Delish! We hope you enjoyed your meal.</p>
                 </div>
-                <h2 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Payment Complete</h2>
-                <p className="text-gray-500 mb-8 max-w-sm mx-auto font-medium">Thank you for visiting Hotel Delish! We hope you enjoyed your meal.</p>
-              </div>
+              ) : (
+                <div>
+                  <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Sparkles className="w-10 h-10 text-indigo-400" />
+                  </div>
+                  <h2 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Ready to Order?</h2>
+                  <p className="text-gray-500 mb-8 max-w-sm mx-auto font-medium">Your bill is currently empty. Head over to the menu to discover our delicious offerings!</p>
+                  
+                  <Link href={`/?table=${tableNumber}`} className="inline-flex items-center gap-2 bg-indigo-600 text-white font-black px-8 py-4 rounded-2xl hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all text-lg mb-4 shadow-lg shadow-indigo-200">
+                    Browse Menu
+                  </Link>
+                </div>
+              )}
               
-              <RatingSection tableNumber={tableNumber} sessionId={sessionId} />
+              {(hasPaidOrders || unpaidOrders.length > 0) && (
+                <RatingSection tableNumber={tableNumber} sessionId={sessionId} />
+              )}
 
-              <Link href={`/?table=${tableNumber}`} className="inline-flex items-center gap-2 border-2 border-slate-200 text-slate-500 font-black px-8 py-4 rounded-2xl hover:bg-slate-50 transition-all text-lg mb-4">
-                Return to Menu
-              </Link>
+              {hasPaidOrders && (
+                <Link href={`/?table=${tableNumber}`} className="inline-flex items-center gap-2 border-2 border-slate-200 text-slate-500 font-black px-8 py-4 rounded-2xl hover:bg-slate-50 transition-all text-lg mb-4">
+                  Return to Menu
+                </Link>
+              )}
             </div>
           ) : (
             <>
