@@ -133,12 +133,19 @@ export default function ItemDetailModal({
 
           <button
             onClick={() => {
-              onAddToCart(item, quantity);
-              onClose();
+              if (item.isAvailable) {
+                onAddToCart(item, quantity);
+                onClose();
+              }
             }}
-            className="w-full bg-primary text-primary-foreground h-11 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            disabled={!item.isAvailable}
+            className={`w-full h-11 rounded-lg font-medium transition-colors ${
+              item.isAvailable 
+                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                : "bg-muted text-muted-foreground cursor-not-allowed border border-border"
+            }`}
           >
-            Add to Order
+            {item.isAvailable ? "Add to Order" : "Currently Out of Stock"}
           </button>
         </div>
       </div>

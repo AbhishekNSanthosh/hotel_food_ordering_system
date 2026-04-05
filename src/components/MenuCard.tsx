@@ -21,11 +21,18 @@ const MenuCard = forwardRef<HTMLDivElement, MenuCardProps>(
             <img
               src={item.image}
               alt={item.name}
-              className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+              className={`object-cover w-full h-full transition-transform duration-500 group-hover:scale-105 ${!item.isAvailable && 'grayscale opacity-60'}`}
             />
           ) : (
             <div className="flex h-full items-center justify-center bg-secondary/50 text-muted-foreground text-sm font-medium">
               No Images
+            </div>
+          )}
+          {!item.isAvailable && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+              <span className="bg-white/90 text-red-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-xl">
+                Sold Out
+              </span>
             </div>
           )}
           <div className="absolute top-2 right-2">
@@ -43,10 +50,10 @@ const MenuCard = forwardRef<HTMLDivElement, MenuCardProps>(
 
         <div className="flex flex-1 flex-col p-4">
           <div className="flex justify-between items-start gap-2 mb-2">
-            <h3 className="font-medium text-base text-foreground line-clamp-1">
+            <h3 className={`font-medium text-base text-foreground line-clamp-1 ${!item.isAvailable && 'text-gray-400'}`}>
               {item.name}
             </h3>
-            <span className="font-semibold text-sm text-foreground">
+            <span className={`font-semibold text-sm text-foreground ${!item.isAvailable && 'text-gray-400'}`}>
               ₹{item.price.toFixed(2)}
             </span>
           </div>
@@ -63,16 +70,22 @@ const MenuCard = forwardRef<HTMLDivElement, MenuCardProps>(
                 </span>
               )}
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAdd(item);
-              }}
-              className="h-8 px-3 flex items-center gap-1.5 rounded-full bg-foreground text-background text-xs font-semibold hover:opacity-90 transition-opacity"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add to cart
-            </button>
+            {item.isAvailable ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAdd(item);
+                }}
+                className="h-8 px-3 flex items-center gap-1.5 rounded-full bg-foreground text-background text-xs font-semibold hover:opacity-90 transition-opacity"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add to cart
+              </button>
+            ) : (
+              <span className="text-[10px] font-bold text-red-500 uppercase tracking-tight px-3 py-1 bg-red-50 rounded-full border border-red-100">
+                Out of Stock
+              </span>
+            )}
           </div>
         </div>
       </div>

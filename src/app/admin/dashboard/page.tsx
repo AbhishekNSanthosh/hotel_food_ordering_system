@@ -320,7 +320,7 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (activeSection === "menu") {
+    if (activeSection === "menu" || activeSection === "stock") {
       fetchMenuItems();
     }
   }, [activeSection]);
@@ -530,6 +530,7 @@ export default function AdminDashboard() {
     { id: "dashboard", name: "Dashboard", icon: "📊" },
     { id: "orders", name: "Orders", icon: "🛒", badge: orders.length },
     { id: "menu", name: "Menu Management", icon: "🍽️" },
+    { id: "stock", name: "Live Stock", icon: "📦" },
     { id: "kitchen", name: "Kitchen", icon: "👨‍🍳" },
     { id: "billing", name: "Billing", icon: "💳" },
     { id: "feedback", name: "Customer Feedback", icon: "⭐", badge: ratings.length },
@@ -1147,6 +1148,79 @@ export default function AdminDashboard() {
                     </table>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+
+          {activeSection === "stock" && (
+            <div className="space-y-6">
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-black text-foreground tracking-tight">Live Stock Management</h2>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">Real-time Kitchen Availability Control</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center bg-emerald-50 text-emerald-700 px-4 py-2 rounded-2xl border border-emerald-100 min-w-[100px]">
+                      <span className="text-xl font-black">{menuItems.filter(i => i.isAvailable).length}</span>
+                      <span className="text-[10px] font-bold uppercase">In Stock</span>
+                    </div>
+                    <div className="flex flex-col items-center bg-rose-50 text-rose-700 px-4 py-2 rounded-2xl border border-rose-100 min-w-[100px]">
+                      <span className="text-xl font-black">{menuItems.filter(i => !i.isAvailable).length}</span>
+                      <span className="text-[10px] font-bold uppercase">Sold Out</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pb-12">
+                {menuItems.map((item) => (
+                  <div 
+                    key={item._id}
+                    className={`group bg-card border-2 rounded-[2rem] p-5 transition-all duration-500 hover:scale-[1.03] ${
+                      item.isAvailable 
+                        ? 'border-emerald-100/50 shadow-sm hover:shadow-emerald-100/50 hover:shadow-xl' 
+                        : 'border-rose-100/50 bg-rose-50/5 grayscale shadow-none'
+                    }`}
+                  >
+                    <div className="relative mb-5">
+                      <div className={`aspect-square rounded-3xl overflow-hidden bg-muted shadow-inner ring-4 ring-white transition-all duration-500 ${!item.isAvailable && 'opacity-60 grayscale-[0.8]'}`}>
+                        {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />}
+                      </div>
+                      <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl flex items-center justify-center shadow-2xl transition-transform duration-500 group-hover:rotate-12 ${item.isAvailable ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
+                        {item.isAvailable ? '✓' : '✗'}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 mb-6">
+                      <h4 className={`text-lg font-black tracking-tight truncate ${!item.isAvailable ? 'text-gray-400' : 'text-foreground'}`}>{item.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{item.category}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-dashed border-border flex flex-col gap-3">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status</span>
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${item.isAvailable ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          {item.isAvailable ? 'Available' : 'Out of Stock'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => toggleAvailability(item)}
+                        className={`w-full py-4 rounded-[1.5rem] text-[11px] font-black uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-95 ${
+                          item.isAvailable 
+                            ? 'bg-rose-500 text-white hover:bg-rose-600 shadow-rose-200' 
+                            : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-200'
+                        }`}
+                      >
+                        {item.isAvailable ? 'Mark Sold Out' : 'Restore Stock'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
