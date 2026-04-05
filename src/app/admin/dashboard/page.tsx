@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { ChevronDown, Plus, Minus, Trash2, Edit3, Camera, X, Printer, CreditCard, Banknote, Smartphone, Percent, CheckCircle2, Receipt, Search, LogOut, User } from "lucide-react";
+import { ChevronDown, Plus, Minus, Trash2, Edit3, Camera, X, Printer, CreditCard, Banknote, Smartphone, Percent, CheckCircle2, Receipt, Search, LogOut, User, BarChart2, TrendingUp, Calendar } from "lucide-react";
+import { 
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
+    AreaChart, Area, ComposedChart, Line
+} from 'recharts';
 
 interface OrderItem {
   menuItem: string;
@@ -1968,6 +1972,14 @@ export default function AdminDashboard() {
               
             // Sort dates descending
             const dailyReports = Object.entries(dailyStats).sort((a, b) => b[0].localeCompare(a[0]));
+            
+            // Prepare data for chart (ascending for chronological order)
+            const chartData = Object.entries(dailyStats).map(([date, stats]) => ({
+              date: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+              revenue: stats.revenue,
+              orders: stats.orders,
+              originalDate: date
+            })).sort((a, b) => a.originalDate.localeCompare(b.originalDate));
 
             const avgRating = ratings.length 
               ? (ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length).toFixed(1) 
@@ -2015,6 +2027,96 @@ export default function AdminDashboard() {
                         <span className="text-xs font-bold text-muted-foreground ml-1">({ratings.length} reviews)</span>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Sales Analytics Graph */}
+                <div className="bg-card border border-border rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">Sales Performance</h2>
+                      <p className="text-xs text-muted-foreground mt-0.5">Revenue and order volume trends over time</p>
+                    </div>
+                    <div className="flex gap-2">
+                       <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-[10px] font-bold text-green-700 border border-green-100">
+                          <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                          Revenue
+                       </div>
+                       <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-[10px] font-bold text-indigo-700 border border-indigo-100">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                          Orders
+                       </div>
+                    </div>
+                  </div>
+                  
+                  <div className="h-[350px] w-full">
+                    {chartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={chartData}>
+                          <defs>
+                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                              <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                          <XAxis 
+                            dataKey="date" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{fontSize: 12, fontWeight: 600, fill: '#64748b'}} 
+                            dy={10}
+                          />
+                          <YAxis 
+                            yAxisId="left"
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{fontSize: 12, fontWeight: 600, fill: '#64748b'}} 
+                            tickFormatter={(value) => `₹${value}`}
+                          />
+                          <YAxis 
+                            yAxisId="right" 
+                            orientation="right" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{fontSize: 12, fontWeight: 600, fill: '#64748b'}} 
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#ffffff', 
+                              borderRadius: '12px', 
+                              border: '1px solid #e2e8f0', 
+                              boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                              fontSize: '12px',
+                              fontWeight: '600'
+                            }}
+                          />
+                          <Area 
+                            yAxisId="left"
+                            type="monotone" 
+                            dataKey="revenue" 
+                            stroke="#10b981" 
+                            strokeWidth={3}
+                            fillOpacity={1} 
+                            fill="url(#colorRevenue)" 
+                            name="Revenue"
+                          />
+                          <Bar 
+                            yAxisId="right"
+                            dataKey="orders" 
+                            fill="#4f46e5" 
+                            radius={[4, 4, 0, 0]} 
+                            barSize={20} 
+                            name="Orders"
+                          />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center bg-muted/30 rounded-xl border border-dashed border-border opacity-50">
+                        <TrendingUp className="w-12 h-12 mb-2 text-muted-foreground" />
+                        <p className="text-sm font-bold text-muted-foreground">Insufficient data for chart</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

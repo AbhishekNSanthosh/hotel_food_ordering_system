@@ -202,7 +202,8 @@ function BillContent() {
               </Link>
             </div>
           ) : (
-            <div className="bg-white rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-2xl print:shadow-none print:border-none print:rounded-none">
+            <>
+              <div className="bg-white rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-2xl print:shadow-none print:border-none print:rounded-none">
               <div className="p-8 pb-6 text-center border-b-2 border-dashed border-gray-200 mb-6 bg-gray-50/50 print:bg-white print:p-4">
                   <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-1">Hotel Delish</h2>
                   <p className="text-gray-400 text-[10px] uppercase font-black tracking-[0.2em] mb-4">Fine Dining Experience</p>
@@ -291,6 +292,16 @@ function BillContent() {
                   <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Please Visit Again</p>
               </div>
             </div>
+            
+            <div className="mt-12 w-full pb-12 print:hidden">
+              <div className="flex items-center gap-4 px-2 mb-8">
+                <div className="h-px flex-1 bg-gray-200"></div>
+                <h4 className="text-xs font-black uppercase tracking-widest text-gray-400">Rate Our Service</h4>
+                <div className="h-px flex-1 bg-gray-200"></div>
+              </div>
+              <RatingSection tableNumber={tableNumber} sessionId={sessionId} />
+            </div>
+          </>
           )}
         </div>
       </main>

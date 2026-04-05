@@ -18,7 +18,6 @@ import {
 import Link from "next/link";
 import GameZone from "@/components/GameZone";
 import CompensationModal from "@/components/CompensationModal";
-import RatingSection from "@/components/RatingSection";
 
 interface OrderItem {
   name: string;
@@ -191,15 +190,6 @@ function OrderStatusContent() {
                   <span>Order Now</span>
                 </Link>
               </div>
-              
-              <div className="space-y-8 pb-12">
-                <div className="flex items-center gap-4 px-2">
-                   <div className="h-px flex-1 bg-gray-200"></div>
-                   <h4 className="text-xs font-black uppercase tracking-widest text-gray-400">Share Your Experience</h4>
-                   <div className="h-px flex-1 bg-gray-200"></div>
-                </div>
-                <RatingSection tableNumber={tableNumber} sessionId={sessionId} />
-              </div>
             </div>
           ) : (
             <div className="flex flex-col gap-12 mb-12">
@@ -291,14 +281,6 @@ function OrderStatusContent() {
                 </div>
               </div>
 
-              <div className="space-y-8">
-                <div className="flex items-center gap-4 px-2">
-                  <div className="h-px flex-1 bg-gray-200"></div>
-                  <h4 className="text-xs font-black uppercase tracking-widest text-gray-400">Rate Our Service</h4>
-                  <div className="h-px flex-1 bg-gray-200"></div>
-                </div>
-                <RatingSection tableNumber={tableNumber} sessionId={sessionId} />
-              </div>
             </div>
           )}
         </div>
