@@ -18,6 +18,7 @@ export interface IOrder extends Document {
     razorpayPaymentId?: string;
     razorpaySignature?: string;
     customerNote?: string;
+    customerName?: string;
     sessionId?: string;
     estimatedPrepTime: number; // in minutes
     preparationStartedAt?: Date; // NEW
@@ -54,6 +55,7 @@ const OrderSchema: Schema = new Schema(
         razorpayPaymentId: { type: String },
         razorpaySignature: { type: String },
         customerNote: { type: String },
+        customerName: { type: String },
         sessionId: { type: String, index: true },
         estimatedPrepTime: { type: Number, default: 15 }, // Store total prep time calculated at order creation
         preparationStartedAt: { type: Date }, // NEW: Track when the timer actually starts

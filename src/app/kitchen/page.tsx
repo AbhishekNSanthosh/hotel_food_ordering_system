@@ -16,7 +16,8 @@ interface Order {
     items: OrderItem[];
     status: string;
     createdAt: string;
-    notes?: string;
+    customerNote?: string;
+    customerName?: string;
 }
 
 export default function KitchenDashboard() {
@@ -104,6 +105,11 @@ export default function KitchenDashboard() {
                                     <div className="px-4 py-3 border-b flex justify-between items-center bg-yellow-50/50">
                                         <h3 className="text-xl font-bold text-gray-900">
                                             Table #{order.tableNumber}
+                                            {order.customerName && (
+                                                <span className="ml-2 text-sm font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                                                    {order.customerName}
+                                                </span>
+                                            )}
                                         </h3>
                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">
                                             {order.status}
@@ -118,9 +124,9 @@ export default function KitchenDashboard() {
                                                 </div>
                                             ))}
                                         </div>
-                                        {order.notes && (
+                                        {order.customerNote && (
                                             <div className="mt-3 p-3 bg-red-50 text-red-700 text-sm rounded-md border border-red-200">
-                                                <strong>Note:</strong> {order.notes}
+                                                <strong>Note:</strong> {order.customerNote}
                                             </div>
                                         )}
                                         <div className="text-xs text-gray-400 text-right">

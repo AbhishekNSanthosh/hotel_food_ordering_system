@@ -65,6 +65,7 @@ export default function OrderConfirmationModal({
         body: JSON.stringify({
           tableNumber,
           customerNote: notes,
+          customerName,
           sessionId,
           items: cart.map((i) => ({
             menuItem: i.menuItem._id,

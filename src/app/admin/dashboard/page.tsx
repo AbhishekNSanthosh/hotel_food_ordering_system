@@ -22,11 +22,12 @@ interface Order {
   _id: string;
   tableNumber: string;
   customerName?: string;
+  customerNote?: string;
   items: OrderItem[];
   totalAmount: number;
   status: string;
   createdAt: string;
-  preparationStartedAt?: string; // NEW
+  preparationStartedAt?: string;
   estimatedPrepTime: number;
 }
 
@@ -1480,10 +1481,18 @@ export default function AdminDashboard() {
                               <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot} inline-block`}></span>
                               <span className={`text-sm font-bold ${cfg.text}`}>{cfg.label}</span>
                               {order.customerName && (
-                                <span className="ml-auto text-xs text-muted-foreground font-medium">👤 {order.customerName}</span>
+                                <span className="ml-auto text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                                  {order.customerName}
+                                </span>
                               )}
                             </div>
-                            <div className="w-full bg-black/5 rounded-full h-1.5 overflow-hidden">
+                            {order.customerNote && (
+                              <div className="mt-2 text-xs text-rose-600 font-bold bg-rose-50/50 p-2 rounded-lg border border-rose-100 flex items-start gap-2">
+                                <span className="text-base leading-none mt-0.5">📝</span>
+                                <span>{order.customerNote}</span>
+                              </div>
+                            )}
+                            <div className="mt-2 w-full bg-black/5 rounded-full h-1.5 overflow-hidden">
                               <div
                                 className={`h-full transition-all duration-1000 ${remaining <= -10 ? 'bg-rose-400' : remaining <= 0 ? 'bg-orange-400' : 'bg-emerald-400'}`}
                                 style={{ width: `${progress}%` }}
@@ -1615,6 +1624,12 @@ export default function AdminDashboard() {
                         <div className="px-6 py-4">
                           {o.customerName && (
                             <p className="text-sm text-muted-foreground mb-3">👤 <strong>{o.customerName}</strong></p>
+                          )}
+                          {o.customerNote && (
+                            <div className="mb-4 p-3 bg-rose-50 text-rose-700 text-sm rounded-xl border border-rose-100 flex items-start gap-2 animate-in slide-in-from-top-1">
+                              <span className="text-lg leading-none mt-0.5">📝</span>
+                              <span className="font-medium">"{o.customerNote}"</span>
+                            </div>
                           )}
                           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Order Items</h3>
                           <ul className="space-y-3">
