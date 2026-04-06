@@ -6,8 +6,8 @@ import Order from '@/models/Order';
 import Menu from '@/models/Menu';
 
 export async function POST(req: Request) {
-    await dbConnect();
     try {
+        await dbConnect();
         const body = await req.json();
 
         if (!body.items || body.items.length === 0) {

@@ -7,8 +7,8 @@ export async function PATCH(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    await dbConnect();
     try {
+        await dbConnect();
         const { id } = await params;
         const body = await request.json();
 

@@ -4,8 +4,8 @@ import dbConnect from '@/lib/db';
 import Menu from '@/models/Menu';
 
 export async function GET() {
-    await dbConnect();
     try {
+        await dbConnect();
         const categories = await Menu.distinct('category');
         return NextResponse.json(["All", ...categories.sort()]);
     } catch (error) {

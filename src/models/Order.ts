@@ -65,8 +65,5 @@ const OrderSchema: Schema = new Schema(
     { timestamps: true }
 );
 
-// Refresh model if schema changed (important for Next.js hot reloading when adding fields)
-if (mongoose.models.Order) {
-    delete mongoose.models.Order;
-}
-export default mongoose.model<IOrder>('Order', OrderSchema);
+// Use cached model to prevent recompilation on hot reloads
+export default (mongoose.models.Order as mongoose.Model<IOrder>) || mongoose.model<IOrder>('Order', OrderSchema);

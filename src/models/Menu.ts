@@ -31,8 +31,4 @@ const MenuSchema: Schema = new Schema(
     { timestamps: true }
 );
 
-// Refresh model if schema changed (important for Next.js hot reloading when adding fields)
-if (mongoose.models.Menu) {
-    delete mongoose.models.Menu;
-}
-export default mongoose.model<IMenu>('Menu', MenuSchema);
+export default (mongoose.models.Menu as mongoose.Model<IMenu>) || mongoose.model<IMenu>('Menu', MenuSchema);

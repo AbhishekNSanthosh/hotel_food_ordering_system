@@ -6,8 +6,8 @@ import Menu from '@/models/Menu';
 
 // GET - Fetch all menu items
 export async function GET() {
-    await dbConnect();
     try {
+        await dbConnect();
         const items = await Menu.find({}).sort({ category: 1, name: 1 });
         return NextResponse.json(items);
     } catch (error) {
@@ -18,8 +18,8 @@ export async function GET() {
 
 // POST - Create a new menu item
 export async function POST(request: NextRequest) {
-    await dbConnect();
     try {
+        await dbConnect();
         const body = await request.json();
 
         if (!body.image) {
@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update a menu item
 export async function PUT(request: NextRequest) {
-    await dbConnect();
     try {
+        await dbConnect();
         const body = await request.json();
         console.log('UPDATING MENU ITEM:', body);
         const { _id, ...updateData } = body;
@@ -65,8 +65,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete a menu item
 export async function DELETE(request: NextRequest) {
-    await dbConnect();
     try {
+        await dbConnect();
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 

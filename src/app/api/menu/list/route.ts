@@ -4,8 +4,8 @@ import dbConnect from '@/lib/db';
 import Menu from '@/models/Menu';
 
 export async function GET(request: NextRequest) {
-    await dbConnect();
     try {
+        await dbConnect();
         const { searchParams } = new URL(request.url);
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '12');

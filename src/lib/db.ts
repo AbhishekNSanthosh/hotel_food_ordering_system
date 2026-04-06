@@ -40,13 +40,22 @@ async function dbConnect() {
     );
   }
 
-  if (cached.conn) {
+  // Reuse cached connection only if it is still connected (readyState === 1)
+  if (cached.conn && cached.conn.readyState === 1) {
     return cached.conn;
+  }
+
+  // If connection is broken/closed, reset so we reconnect fresh
+  if (cached.conn && cached.conn.readyState !== 1) {
+    cached.conn = null;
+    cached.promise = null;
   }
 
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 10000, // 10s timeout for Atlas SRV lookups
+      socketTimeoutMS: 45000,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {

@@ -137,3 +137,14 @@ input[type=number] {
   border-radius: 20px;
   opacity: 0.5;
 }
+
+/* ── Network overlay animations ─────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes blobFloat {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(20px, -20px) scale(1.08); }
+  100% { transform: translate(-10px, 15px) scale(0.95); }
+}
