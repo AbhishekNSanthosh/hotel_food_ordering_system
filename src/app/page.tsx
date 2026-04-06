@@ -259,28 +259,50 @@ function MenuContent() {
   const seedData = async () => {
     setInitialLoading(true);
     try {
-      const res = await fetch("/api/seed", { method: "POST" });
+      console.log("Starting seed process...");
+      // Using absolute origin to prevent "Failed to fetch" in some Next/Turbopack environments
+      const apiUrl = `${window.location.origin}/api/seed`;
+      console.log(`Fetching: ${apiUrl}`);
+      
+      const res = await fetch(apiUrl, { 
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log(`Response status: ${res.status}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.details || "Failed to seed");
+      
+      if (!res.ok) {
+        throw new Error(data.details || data.error || "Failed to seed");
+      }
 
+      toast.success("Sample menu loaded successfully!");
+      
       // Reset and reload
       setPage(1);
       setHasMore(true);
+      
+      // Reload categories
+      await fetchCategories();
+      
       const queryParams = new URLSearchParams({
         page: "1",
         limit: limit.toString(),
         category: selectedCategory,
         veg: vegFilter,
       });
+      console.log("Reloading menu items...");
       const menuRes = await fetch(`/api/menu/list?${queryParams}`);
       if (menuRes.ok) {
         const menuData = await menuRes.json();
         setMenuItems(menuData.items);
         setHasMore(menuData.hasMore);
+        console.log(`Loaded ${menuData.items.length} items`);
       }
-      await fetchCategories();
     } catch (error: any) {
-      console.error(error);
+      console.error("Seed error details:", error);
       toast.error(`Failed to seed data: ${error.message}`);
     } finally {
       setInitialLoading(false);

@@ -3,12 +3,17 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Menu from '@/models/Menu';
 
-export async function POST() {
+export async function POST(req: Request) {
+    console.log('Seed request received');
     try {
+        console.log('Connecting to database...');
         await dbConnect();
+        console.log('Connected successfully');
 
         // Clear existing menu
+        console.log('Deleting existing menu items...');
         await Menu.deleteMany({});
+        console.log('Deleted successfully');
 
         const menuItems = [
             {
@@ -143,7 +148,9 @@ export async function POST() {
             },
         ];
 
+        console.log(`Inserting ${menuItems.length} menu items...`);
         await Menu.insertMany(menuItems);
+        console.log('Inserted successfully');
 
         return NextResponse.json({ message: 'Menu seeded successfully', count: menuItems.length });
     } catch (error: any) {

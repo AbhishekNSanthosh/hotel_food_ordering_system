@@ -130,6 +130,7 @@ function BillContent() {
       }
 
       if (!res.ok) throw new Error(data?.error || "Failed to initiate payment");
+      if (!data.keyId) throw new Error("Razorpay Key ID is missing from server response.");
 
       const options = {
         key: data.keyId,

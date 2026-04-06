@@ -1,13 +1,16 @@
-
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Explicitly set DNS servers to bypass ISP-related resolution issues with MongoDB Atlas (SRV records)
+if (process.env.NODE_ENV === 'development') {
+  try {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+  } catch (e) {
+    console.warn('Could not set custom DNS servers, using system default.');
+  }
+}
 
 const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error(
-    'Please define the MONGODB_URI environment variable inside .env.local'
-  );
-}
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -31,6 +34,12 @@ if (!cached) {
 }
 
 async function dbConnect() {
+  if (!MONGODB_URI) {
+    throw new Error(
+      'Please define the MONGODB_URI environment variable inside .env.local'
+    );
+  }
+
   if (cached.conn) {
     return cached.conn;
   }

@@ -6,13 +6,19 @@ import Menu from '@/models/Menu';
 
 
 export async function POST(req: Request) {
-    const razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID!,
-        key_secret: process.env.RAZORPAY_KEY_SECRET!,
-    });
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+        return NextResponse.json({ 
+            error: 'Razorpay keys are not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to your environment variables.' 
+        }, { status: 500 });
+    }
 
-    await dbConnect();
     try {
+        const razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+
+        await dbConnect();
         const body = await req.json();
 
         if (!body.items || body.items.length === 0) {

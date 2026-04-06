@@ -101,6 +101,10 @@ export default function PaymentModal({
 
       const { orderId, razorpayOrderId, amount, currency, keyId } = data;
 
+      if (!keyId) {
+        throw new Error("Razorpay Key ID is missing from server response. Please check your configuration.");
+      }
+
       setIsLoading(false);
       setView("processing");
 
